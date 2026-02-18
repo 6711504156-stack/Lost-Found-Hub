@@ -1,1 +1,361 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost & Found Hub - ศูนย์รวมแจ้งของหาย</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .vibrant-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+        }
+        .vibrant-bg {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+        }
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.1);
+        }
+        .item-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .item-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .search-focus:focus-within {
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+            border-color: #6366f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 10px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="min-h-screen custom-scrollbar">
 
+    <!-- Navbar -->
+    <nav class="glass-nav fixed top-0 w-full z-[60] px-4 py-3">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3 group cursor-pointer">
+                <div class="vibrant-gradient p-2 rounded-2xl shadow-lg group-hover:rotate-12 transition-transform">
+                    <i data-lucide="search" class="w-6 h-6 text-white"></i>
+                </div>
+                <h1 class="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-cyan-500 tracking-tight">
+                    LostFound<span class="text-indigo-400">Hub</span>
+                </h1>
+            </div>
+            <button onclick="toggleModal('reportModal')" class="vibrant-gradient hover:opacity-90 text-white font-semibold py-2.5 px-6 rounded-2xl flex items-center space-x-2 transition-all shadow-md active:scale-95">
+                <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                <span class="hidden sm:inline">แจ้งเรื่องใหม่</span>
+                <span class="sm:hidden">แจ้ง</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Header & Search Section -->
+    <header class="pt-28 pb-12 px-4 vibrant-bg">
+        <div class="container mx-auto text-center max-w-4xl">
+            <h2 class="text-4xl md:text-5xl font-extrabold text-slate-800 mb-4 leading-tight">
+                ศูนย์กลาง <span class="text-indigo-600 underline decoration-cyan-400 underline-offset-8">ตามหาของหาย</span> ชุมชนไทย
+            </h2>
+            <p class="text-slate-500 text-lg mb-10 max-w-2xl mx-auto">ช่วยกันเป็นหูเป็นตา เพื่อส่งต่อความหวังให้กับเจ้าของที่กำลังรอคอย</p>
+            
+            <div class="max-w-2xl mx-auto relative group">
+                <div class="search-focus flex items-center bg-white rounded-3xl border-2 border-slate-100 transition-all p-1 shadow-sm">
+                    <div class="pl-5 text-slate-400">
+                        <i data-lucide="search" class="w-6 h-6"></i>
+                    </div>
+                    <input type="text" id="searchInput" onkeyup="filterItems()" placeholder="ค้นหา เช่น กระเป๋าสตางค์, น้องแมว, กุญแจรถ..." class="w-full p-4 focus:outline-none text-lg bg-transparent">
+                    <button class="vibrant-gradient text-white p-3 rounded-2xl mr-1 hidden sm:block">
+                        ค้นหา
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="container mx-auto py-12 px-4 max-w-6xl">
+        <!-- Filter Tabs -->
+        <div class="flex flex-wrap justify-center items-center gap-3 mb-10">
+            <button onclick="switchTab('all')" id="tab-all" class="tab-btn px-8 py-3 rounded-2xl font-semibold bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-all">ทั้งหมด</button>
+            <button onclick="switchTab('lost')" id="tab-lost" class="tab-btn px-8 py-3 rounded-2xl font-semibold bg-white text-slate-600 border border-slate-200 hover:border-indigo-300 transition-all">
+                <span class="inline-block w-2 h-2 rounded-full bg-rose-500 mr-2"></span>ของหาย
+            </button>
+            <button onclick="switchTab('found')" id="tab-found" class="tab-btn px-8 py-3 rounded-2xl font-semibold bg-white text-slate-600 border border-slate-200 hover:border-cyan-300 transition-all">
+                <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>เก็บได้
+            </button>
+        </div>
+
+        <!-- Dynamic Grid -->
+        <div id="itemsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- JS will inject items here -->
+        </div>
+    </main>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2rem] w-full max-w-2xl max-h-[90vh] overflow-y-auto custom-scrollbar relative">
+            <button onclick="toggleModal('detailModal')" class="absolute top-4 right-4 bg-white/80 hover:bg-white text-slate-800 p-2 rounded-full z-10 shadow-lg">
+                <i data-lucide="x"></i>
+            </button>
+            <div id="modalContent">
+                <!-- Injected Detail Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-[2.5rem] w-full max-w-lg overflow-hidden shadow-2xl">
+            <div class="vibrant-gradient p-8 text-white relative">
+                <h3 class="text-2xl font-bold">แจ้งเรื่องใหม่</h3>
+                <p class="text-white/80">กรุณากรอกรายละเอียดให้ครบถ้วนเพื่อความรวดเร็ว</p>
+                <button onclick="toggleModal('reportModal')" class="absolute top-8 right-8 text-white/50 hover:text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <form id="reportForm" class="p-8 space-y-5">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">ประเภท</label>
+                        <select id="itemType" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none transition-all appearance-none bg-slate-50">
+                            <option value="lost">🔴 ของหาย (Lost)</option>
+                            <option value="found">🟢 เก็บได้ (Found)</option>
+                        </select>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">ชื่อสิ่งของ</label>
+                        <input type="text" id="itemName" placeholder="เช่น กระเป๋าตังค์" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none bg-slate-50" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">สถานที่</label>
+                        <input type="text" id="itemLocation" placeholder="เช่น ห้างสรรพสินค้า" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none bg-slate-50" required>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">วันที่</label>
+                        <input type="date" id="itemDate" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none bg-slate-50" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">ช่องทางติดต่อ</label>
+                    <input type="text" id="itemContact" placeholder="เบอร์โทร, Line ID หรือ Facebook" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none bg-slate-50" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">รายละเอียดเพิ่มเติม</label>
+                    <textarea id="itemDesc" rows="3" class="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-indigo-100 outline-none bg-slate-50" placeholder="สี ขนาด หรือจุดสังเกตเด่นๆ..."></textarea>
+                </div>
+                <button type="submit" class="w-full vibrant-gradient text-white font-bold py-4 rounded-2xl shadow-xl hover:scale-[1.02] active:scale-95 transition-all">
+                    ส่งข้อมูลประกาศ
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 vibrant-gradient text-white px-8 py-4 rounded-2xl shadow-2xl opacity-0 transition-all duration-500 pointer-events-none z-[200] font-medium">
+        สำเร็จ!
+    </div>
+
+    <script>
+        // Data Mockup
+        let items = [
+            { id: 1, type: 'lost', name: 'กระเป๋าสตางค์ COACH สีน้ำตาล', location: 'สถานี BTS สยาม', date: '2023-11-15', contact: '081-222-XXXX', desc: 'ข้างในมีบัตรประชาชนชื่อ "พรทิพย์" และบัตรแรบบิทลายการ์ตูน หากใครพบเห็นรบกวนติดต่อกลับ มีค่าตอบแทนให้เล็กน้อยค่ะ', img: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&q=80' },
+            { id: 2, type: 'found', name: 'กุญแจรถยนต์ Honda', location: 'ลานจอดรถ Fashion Island', date: '2023-11-16', contact: '095-XXX-XXXX', desc: 'เก็บได้บริเวณชั้น 2 โซนจอดรถใกล้ประตูทางเข้า กุญแจมีพวงกุญแจรูปนักบินอวกาศติดอยู่ครับ', img: 'https://images.unsplash.com/photo-1549194388-f61be84a6e9e?w=800&q=80' },
+            { id: 3, type: 'lost', name: 'แมวสามสี น้องชื่อ "กะทิ"', location: 'ย่านลาดพร้าว 101', date: '2023-11-14', contact: 'Line: help-kati', desc: 'น้องหายออกจากบ้านเมื่อเย็นวันพุธ ใส่ปลอกคอสีแดงพร้อมกระดิ่ง น้องค่อนข้างขี้กลัวคนแปลกหน้าครับ', img: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=800&q=80' },
+            { id: 4, type: 'found', name: 'สมาร์ทวอทช์สีดำ', location: 'สวนลุมพินี', date: '2023-11-17', contact: '062-XXX-XXXX', desc: 'เจอตกอยู่บนม้านั่งริมน้ำ ช่วงเวลาประมาณ 7 โมงเช้า ชาร์จไฟเข้าปกติ ใครเป็นเจ้าของระบุรุ่นและวอลเปเปอร์มาได้เลยครับ', img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80' }
+        ];
+
+        let currentTab = 'all';
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        // Render List
+        function renderItems(filterText = '') {
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+
+            const filtered = items.filter(item => {
+                const matchesTab = currentTab === 'all' || item.type === currentTab;
+                const matchesSearch = item.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                                     item.location.toLowerCase().includes(filterText.toLowerCase());
+                return matchesTab && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                        <div class="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
+                             <i data-lucide="package-search" class="w-10 h-10"></i>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-400">ไม่พบรายการที่คุณต้องการ</h4>
+                        <p class="text-slate-400">ลองเปลี่ยนคำค้นหา หรือช่วยแจ้งเรื่องใหม่ได้นะ</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.forEach((item, index) => {
+                const isLost = item.type === 'lost';
+                const card = document.createElement('div');
+                card.className = `item-card bg-white rounded-[2rem] overflow-hidden border border-slate-100 animate-fade-in`;
+                card.style.animationDelay = `${index * 0.1}s`;
+                card.innerHTML = `
+                    <div class="relative h-56 overflow-hidden">
+                        <img src="${item.img}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-700 hover:scale-110">
+                        <div class="absolute top-4 left-4 ${isLost ? 'bg-rose-500' : 'bg-emerald-500'} text-white px-5 py-1.5 rounded-2xl text-xs font-bold shadow-lg flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            ${isLost ? 'ของหาย' : 'เก็บได้'}
+                        </div>
+                    </div>
+                    <div class="p-7">
+                        <h4 class="text-xl font-bold text-slate-800 mb-3 truncate leading-tight">${item.name}</h4>
+                        <div class="space-y-2.5 mb-6">
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-indigo-400"></i> ${item.location}
+                            </div>
+                            <div class="flex items-center text-slate-500 text-sm">
+                                <i data-lucide="calendar" class="w-4 h-4 mr-2 text-indigo-400"></i> ${item.date}
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-medium text-slate-400">ติดต่อ: ${item.contact.substring(0, 7)}...</span>
+                            <button onclick="showDetails(${item.id})" class="bg-indigo-50 text-indigo-600 px-5 py-2.5 rounded-xl font-bold hover:bg-indigo-600 hover:text-white transition-all text-sm">
+                                ดูข้อมูล
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function filterItems() {
+            renderItems(document.getElementById('searchInput').value);
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-8 py-3 rounded-2xl font-semibold bg-white text-slate-600 border border-slate-200 transition-all';
+            });
+            
+            const activeBtn = document.getElementById(`tab-${tab}`);
+            activeBtn.className = tab === 'lost' ? 'tab-btn px-8 py-3 rounded-2xl font-semibold bg-rose-500 text-white shadow-lg shadow-rose-200 transition-all' :
+                                  tab === 'found' ? 'tab-btn px-8 py-3 rounded-2xl font-semibold bg-emerald-500 text-white shadow-lg shadow-emerald-200 transition-all' :
+                                  'tab-btn px-8 py-3 rounded-2xl font-semibold bg-indigo-600 text-white shadow-lg shadow-indigo-200 transition-all';
+            
+            renderItems(document.getElementById('searchInput').value);
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        function showDetails(id) {
+            const item = items.find(i => i.id === id);
+            const content = document.getElementById('modalContent');
+            const isLost = item.type === 'lost';
+
+            content.innerHTML = `
+                <div class="h-80 w-full overflow-hidden">
+                    <img src="${item.img}" class="w-full h-full object-cover" />
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-3 mb-4">
+                         <span class="${isLost ? 'bg-rose-100 text-rose-600' : 'bg-emerald-100 text-emerald-600'} px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
+                            ${isLost ? 'ของหาย' : 'เก็บได้'}
+                        </span>
+                        <span class="text-slate-400 text-sm flex items-center gap-1">
+                            <i data-lucide="clock" class="w-3.5 h-3.5"></i> ${item.date}
+                        </span>
+                    </div>
+                    <h2 class="text-3xl font-bold text-slate-800 mb-4">${item.name}</h2>
+                    <div class="bg-slate-50 rounded-2xl p-6 mb-6">
+                        <p class="text-slate-600 leading-relaxed">${item.desc || 'ไม่มีรายละเอียดเพิ่มเติม'}</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                        <div class="flex items-center p-4 bg-indigo-50 rounded-2xl">
+                            <i data-lucide="map-pin" class="w-6 h-6 text-indigo-500 mr-3"></i>
+                            <div>
+                                <p class="text-xs text-indigo-400 uppercase font-bold">สถานที่</p>
+                                <p class="text-indigo-900 font-semibold">${item.location}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center p-4 bg-cyan-50 rounded-2xl">
+                            <i data-lucide="phone" class="w-6 h-6 text-cyan-500 mr-3"></i>
+                            <div>
+                                <p class="text-xs text-cyan-400 uppercase font-bold">ติดต่อ</p>
+                                <p class="text-cyan-900 font-semibold">${item.contact}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="toggleModal('detailModal')" class="w-full py-4 bg-slate-100 text-slate-700 font-bold rounded-2xl hover:bg-slate-200 transition-all">
+                        ปิดหน้านี้
+                    </button>
+                </div>
+            `;
+            toggleModal('detailModal');
+            lucide.createIcons();
+        }
+
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newItem = {
+                id: items.length + 1,
+                type: document.getElementById('itemType').value,
+                name: document.getElementById('itemName').value,
+                location: document.getElementById('itemLocation').value,
+                date: document.getElementById('itemDate').value,
+                contact: document.getElementById('itemContact').value,
+                desc: document.getElementById('itemDesc').value,
+                img: 'https://images.unsplash.com/photo-1586769852044-692d6e3703f0?w=800&q=80'
+            };
+            items.unshift(newItem);
+            renderItems();
+            toggleModal('reportModal');
+            this.reset();
+            showToast('ลงทะเบียนประกาศของคุณเรียบร้อยแล้ว!');
+        });
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.remove('opacity-0');
+            toast.classList.add('translate-y-[-20px]');
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.classList.remove('translate-y-[-20px]');
+            }, 3000);
+        }
+
+        window.onload = () => renderItems();
+    </script>
+</body>
+</html>
